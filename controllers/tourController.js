@@ -3,6 +3,8 @@ const APIfunctionality = require('../utils/APIfunctionality');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
+const { deleteOne } = require('./handlerFactory');
+
 const topToursMiddleware = (req, res, next) => {
   req.query.limit = '5';
   req.query.sort = '-ratingsAverage,price';
@@ -28,10 +30,9 @@ const getAllTours = catchAsync(async (req, res, next) => {
 });
 
 const getTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findById(req.params.id);
-
+  const tour = await Tour.findById(req.params.id).populate('reviews');
   if (!tour) {
-    return next(new AppError('No tour found with that ID', 404))
+    return next(new AppError('No tour found with that ID', 404));
   }
   res.status(200).json({
     status: 'success',
@@ -58,7 +59,7 @@ const updateTour = catchAsync(async (req, res, next) => {
   });
 
   if (!updatedTour) {
-    return next(new AppError('No tour found with that ID', 404))
+    return next(new AppError('No tour found with that ID', 404));
   }
   res.status(200).json({
     status: 'success',
@@ -68,20 +69,22 @@ const updateTour = catchAsync(async (req, res, next) => {
   });
 });
 
-const deleteTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findByIdAndDelete(req.params.id);
+const deleteTour = deleteOne(Tour);
+// const deleteTour = catchAsync(async (req, res, next) => {
+//   const tour = await Tour.findByIdAndDelete(req.params.id);
 
-  if (!tour) {
-    return next(new AppError('No tour found with that ID', 404))
-  }
-  res.status(404).json({
-    status: 'success',
-    data: null
-  });
-});
+//   if (!tour) {
+//     return next(new AppError('No tour found with that ID', 404));
+//   }
+//   res.status(404).json({
+//     status: 'success',
+//     data: null
+//   });
+// });
 
 const getTourStats = catchAsync(async (req, res, next) => {
-  const stats = await Tour.aggregate([{
+  const stats = await Tour.aggregate([
+    {
       $match: {
         ratingsAverage: {
           $gte: 4.5
@@ -128,7 +131,8 @@ const getTourStats = catchAsync(async (req, res, next) => {
 
 const getMonthlyPlan = catchAsync(async (req, res, next) => {
   const year = req.params.year * 1;
-  const plan = await Tour.aggregate([{
+  const plan = await Tour.aggregate([
+    {
       $unwind: '$startDates'
     },
     {

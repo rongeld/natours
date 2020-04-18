@@ -20,15 +20,15 @@ mongoose.connect(DB, {
 });
 
 // READ JSOF FILE
-const tours = JSON.parse(fs.readFileSync('./tours-simple.json', 'utf-8'));
+const tours = JSON.parse(fs.readFileSync('./tours.json', 'utf-8'));
 
 // IMPORT DATA TO DATABASE
 const importData = async () => {
   try {
     await Tour.create(tours);
-    console.log('data loaded')
+    console.log('data loaded');
   } catch (err) {
-    console.log(err)
+    console.log(err);
   }
 };
 
@@ -36,12 +36,11 @@ const importData = async () => {
 const deleteData = async () => {
   try {
     await Tour.deleteMany();
-    console.log('data loaded')
+    console.log('data deleted');
   } catch (err) {
-    console.log(err)
+    console.log(err);
   }
-}
+};
 importData();
 
-
-console.log(process.argv)
+console.log(process.argv);

@@ -2,6 +2,8 @@ const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
+const { deleteOne } = require('./handlerFactory');
+
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
   Object.keys(obj).forEach(el => {
@@ -58,8 +60,11 @@ const deleteMe = catchAsync(async (req, res, next) => {
   });
 });
 
+const deleteUser = deleteOne(User);
+
 module.exports = {
   getAllUsers,
   updateMe,
-  deleteMe
+  deleteMe,
+  deleteUser
 };

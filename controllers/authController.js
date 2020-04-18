@@ -17,18 +17,33 @@ const signToken = id =>
     }
   );
 
-const signup = catchAsync(async (req, res, next) => {
-  const newUser = await User.create(req.body);
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true
+  };
 
-  const token = signToken(newUser._id);
+  if (process.env.NODE_ENV === 'production') {
+    cookieOptions.secure = true;
+  }
 
-  res.status(201).json({
+  user.password = undefined;
+
+  res.status(statusCode).json({
     status: 'success',
     token,
     data: {
-      user: newUser
+      user
     }
   });
+};
+
+const signup = catchAsync(async (req, res, next) => {
+  const newUser = await User.create(req.body);
+  createSendToken(newUser, 201, res);
 });
 
 const login = catchAsync(async (req, res, next) => {
@@ -49,12 +64,7 @@ const login = catchAsync(async (req, res, next) => {
   }
 
   //3) send token
-  const token = signToken(user._id);
-
-  res.status(200).json({
-    status: 'success',
-    token
-  });
+  createSendToken(user, 200, res);
 });
 
 const protect = catchAsync(async (req, res, next) => {
@@ -175,12 +185,7 @@ const resetPassword = catchAsync(async (req, res, next) => {
   //3) update changePasswordAt property for the user
 
   //4) log user in, send JWT
-  const token = signToken(user._id);
-
-  res.status(201).json({
-    status: 'success',
-    token
-  });
+  createSendToken(user, 201, res);
 });
 
 const updatePassword = catchAsync(async (req, res, next) => {
@@ -195,12 +200,7 @@ const updatePassword = catchAsync(async (req, res, next) => {
   user.passwordConfirm = req.body.passwordConfirm;
   await user.save();
   // 4) log the user in, send JWT
-  const token = signToken(user._id);
-
-  res.status(201).json({
-    status: 'success',
-    token
-  });
+  createSendToken(user, 201, res);
 });
 
 module.exports = {
